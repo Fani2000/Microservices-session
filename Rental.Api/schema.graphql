@@ -1,0 +1,284 @@
+﻿schema {
+  query: Query
+  mutation: Mutation
+  subscription: Subscription
+}
+
+interface Error {
+  message: String!
+}
+
+type BookReference {
+  "The ID of the book in the catalog"
+  bookId: UUID!
+  "The title of the book"
+  title: String!
+  "The ISBN of the book"
+  isbn: String!
+  author: String!
+}
+
+type CreateCustomerPayload {
+  customer: Customer
+}
+
+type CreateRentalPayload {
+  rental: Rental
+}
+
+type Customer {
+  "The unique identifier of the customer"
+  id: String!
+  "The name of the customer"
+  name: String!
+  "The email address of the customer"
+  email: String!
+  "The phone number of the customer"
+  phone: String!
+  "The address of the customer"
+  address: String!
+  "Get all rentals (active and history) for this customer"
+  rentals: [Rental!]! @cost(weight: "10")
+}
+
+type DeleteCustomerPayload {
+  boolean: Boolean
+}
+
+type Mutation {
+  createRental(input: CreateRentalInput!): CreateRentalPayload! @cost(weight: "10")
+  returnRental(input: ReturnRentalInput!): ReturnRentalPayload! @cost(weight: "10")
+  createCustomer(input: CreateCustomerInput!): CreateCustomerPayload! @cost(weight: "10")
+  updateCustomer(input: UpdateCustomerInput!): UpdateCustomerPayload! @cost(weight: "10")
+  deleteCustomer(input: DeleteCustomerInput!): DeleteCustomerPayload! @cost(weight: "10")
+}
+
+type Query {
+  rentals(where: RentalFilterInput @cost(weight: "10") order: [RentalSortInput!] @cost(weight: "10")): [Rental!]! @cost(weight: "10")
+  customers(where: CustomerFilterInput @cost(weight: "10") order: [CustomerSortInput!] @cost(weight: "10")): [Customer!]! @cost(weight: "10")
+  rentalById(id: UUID!): Rental @cost(weight: "10")
+  customerById(id: UUID!): Customer @cost(weight: "10")
+  customerByEmail(email: String!): Customer @cost(weight: "10")
+  activeRentals: [Rental!]! @cost(weight: "10")
+  overdueRentals: [Rental!]! @cost(weight: "10")
+  isBookAvailable(bookId: UUID!): Boolean! @cost(weight: "10")
+}
+
+type Rental {
+  "The unique identifier of the rental"
+  id: String!
+  "The ID of the customer who rented the book"
+  customerId: String!
+  "The name of the customer who rented the book"
+  customerName: String!
+  "Information about the rented book"
+  book: BookReference!
+  "The date when the book was rented"
+  rentalDate: DateTime!
+  "The date when the book is due to be returned"
+  dueDate: DateTime!
+  "The date when the book was returned, if applicable"
+  returnDate: DateTime
+  "The current status of the rental (Active, Returned, Overdue)"
+  status: String!
+  "The late fee charged, if applicable"
+  lateFee: Decimal!
+  "Additional notes about the rental"
+  notes: String
+  customer: Customer
+}
+
+type ReturnRentalPayload {
+  rental: Rental
+}
+
+type Subscription {
+  onRentalCreated: Rental!
+  onRentalReturned: Rental!
+  onCustomerCreated: Customer!
+  onCustomerUpdated: Customer!
+  onCustomerDeleted: UUID!
+}
+
+type UpdateCustomerPayload {
+  boolean: Boolean
+}
+
+input BookReferenceFilterInput {
+  and: [BookReferenceFilterInput!]
+  or: [BookReferenceFilterInput!]
+  bookId: UuidOperationFilterInput
+  title: StringOperationFilterInput
+  author: StringOperationFilterInput
+  isbn: StringOperationFilterInput
+}
+
+input BookReferenceSortInput {
+  bookId: SortEnumType @cost(weight: "10")
+  title: SortEnumType @cost(weight: "10")
+  author: SortEnumType @cost(weight: "10")
+  isbn: SortEnumType @cost(weight: "10")
+}
+
+input CreateCustomerInput {
+  name: String!
+  email: String!
+  phone: String!
+  address: String!
+}
+
+input CreateRentalInput {
+  customerId: UUID!
+  bookId: UUID!
+}
+
+input CustomerFilterInput {
+  and: [CustomerFilterInput!]
+  or: [CustomerFilterInput!]
+  id: UuidOperationFilterInput
+  name: StringOperationFilterInput
+  email: StringOperationFilterInput
+  phone: StringOperationFilterInput
+  address: StringOperationFilterInput
+  rentals: ListFilterInputTypeOfRentalFilterInput
+}
+
+input CustomerSortInput {
+  id: SortEnumType @cost(weight: "10")
+  name: SortEnumType @cost(weight: "10")
+  email: SortEnumType @cost(weight: "10")
+  phone: SortEnumType @cost(weight: "10")
+  address: SortEnumType @cost(weight: "10")
+}
+
+input DateTimeOperationFilterInput {
+  eq: DateTime @cost(weight: "10")
+  neq: DateTime @cost(weight: "10")
+  in: [DateTime] @cost(weight: "10")
+  nin: [DateTime] @cost(weight: "10")
+  gt: DateTime @cost(weight: "10")
+  ngt: DateTime @cost(weight: "10")
+  gte: DateTime @cost(weight: "10")
+  ngte: DateTime @cost(weight: "10")
+  lt: DateTime @cost(weight: "10")
+  nlt: DateTime @cost(weight: "10")
+  lte: DateTime @cost(weight: "10")
+  nlte: DateTime @cost(weight: "10")
+}
+
+input DecimalOperationFilterInput {
+  eq: Decimal @cost(weight: "10")
+  neq: Decimal @cost(weight: "10")
+  in: [Decimal] @cost(weight: "10")
+  nin: [Decimal] @cost(weight: "10")
+  gt: Decimal @cost(weight: "10")
+  ngt: Decimal @cost(weight: "10")
+  gte: Decimal @cost(weight: "10")
+  ngte: Decimal @cost(weight: "10")
+  lt: Decimal @cost(weight: "10")
+  nlt: Decimal @cost(weight: "10")
+  lte: Decimal @cost(weight: "10")
+  nlte: Decimal @cost(weight: "10")
+}
+
+input DeleteCustomerInput {
+  id: UUID!
+}
+
+input ListFilterInputTypeOfRentalFilterInput {
+  all: RentalFilterInput @cost(weight: "10")
+  none: RentalFilterInput @cost(weight: "10")
+  some: RentalFilterInput @cost(weight: "10")
+  any: Boolean @cost(weight: "10")
+}
+
+input RentalFilterInput {
+  and: [RentalFilterInput!]
+  or: [RentalFilterInput!]
+  id: UuidOperationFilterInput
+  customerId: UuidOperationFilterInput
+  customerName: StringOperationFilterInput
+  book: BookReferenceFilterInput
+  rentalDate: DateTimeOperationFilterInput
+  dueDate: DateTimeOperationFilterInput
+  returnDate: DateTimeOperationFilterInput
+  status: StringOperationFilterInput
+  lateFee: DecimalOperationFilterInput
+  notes: StringOperationFilterInput
+  customer: CustomerFilterInput
+}
+
+input RentalSortInput {
+  id: SortEnumType @cost(weight: "10")
+  customerId: SortEnumType @cost(weight: "10")
+  customerName: SortEnumType @cost(weight: "10")
+  book: BookReferenceSortInput @cost(weight: "10")
+  rentalDate: SortEnumType @cost(weight: "10")
+  dueDate: SortEnumType @cost(weight: "10")
+  returnDate: SortEnumType @cost(weight: "10")
+  status: SortEnumType @cost(weight: "10")
+  lateFee: SortEnumType @cost(weight: "10")
+  notes: SortEnumType @cost(weight: "10")
+  customer: CustomerSortInput @cost(weight: "10")
+}
+
+input ReturnRentalInput {
+  id: UUID!
+}
+
+input StringOperationFilterInput {
+  and: [StringOperationFilterInput!]
+  or: [StringOperationFilterInput!]
+  eq: String @cost(weight: "10")
+  neq: String @cost(weight: "10")
+  contains: String @cost(weight: "20")
+  ncontains: String @cost(weight: "20")
+  in: [String] @cost(weight: "10")
+  nin: [String] @cost(weight: "10")
+  startsWith: String @cost(weight: "20")
+  nstartsWith: String @cost(weight: "20")
+  endsWith: String @cost(weight: "20")
+  nendsWith: String @cost(weight: "20")
+}
+
+input UpdateCustomerInput {
+  id: UUID!
+  name: String!
+  email: String!
+  phone: String!
+  address: String!
+}
+
+input UuidOperationFilterInput {
+  eq: UUID @cost(weight: "10")
+  neq: UUID @cost(weight: "10")
+  in: [UUID] @cost(weight: "10")
+  nin: [UUID] @cost(weight: "10")
+  gt: UUID @cost(weight: "10")
+  ngt: UUID @cost(weight: "10")
+  gte: UUID @cost(weight: "10")
+  ngte: UUID @cost(weight: "10")
+  lt: UUID @cost(weight: "10")
+  nlt: UUID @cost(weight: "10")
+  lte: UUID @cost(weight: "10")
+  nlte: UUID @cost(weight: "10")
+}
+
+enum SortEnumType {
+  ASC
+  DESC
+}
+
+"The purpose of the `cost` directive is to define a `weight` for GraphQL types, fields, and arguments. Static analysis can use these weights when calculating the overall cost of a query or response."
+directive @cost("The `weight` argument defines what value to add to the overall cost for every appearance, or possible appearance, of a type, field, argument, etc." weight: String!) on SCALAR | OBJECT | FIELD_DEFINITION | ARGUMENT_DEFINITION | ENUM | INPUT_FIELD_DEFINITION
+
+"The `@specifiedBy` directive is used within the type system definition language to provide a URL for specifying the behavior of custom scalar definitions."
+directive @specifiedBy("The specifiedBy URL points to a human-readable specification. This field will only read a result for scalar types." url: String!) on SCALAR
+
+"The `DateTime` scalar represents an ISO-8601 compliant date time type."
+scalar DateTime @specifiedBy(url: "https:\/\/www.graphql-scalars.com\/date-time")
+
+"The `Decimal` scalar type represents a decimal floating-point number."
+scalar Decimal
+
+scalar UUID @specifiedBy(url: "https:\/\/tools.ietf.org\/html\/rfc4122")
